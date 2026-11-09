@@ -58,14 +58,15 @@ ACCIDENT_TYPES = [
 def get_db():
     if mysql is None:
         raise RuntimeError("mysql-connector-python is not installed")
+
     return mysql.connector.connect(
         host=app.config["MYSQL_HOST"],
+        port=app.config["MYSQL_PORT"],
         user=app.config["MYSQL_USER"],
         password=app.config["MYSQL_PASSWORD"],
         database=app.config["MYSQL_DB"],
-        connection_timeout=3,
+        connection_timeout=10
     )
-
 
 def fmt_time(value):
     """MySQL TIME comes back as timedelta -> convert to 'HH:MM'."""
@@ -562,10 +563,15 @@ def find_user(email):
     return user
 
 
-def create_user(name, email, pw_hash, phone, role="patient", hospital_name=""):
-    db("INSERT INTO users (name, email, password, phone, role, hospital_name) VALUES (?,?,?,?,?,?)",
-       (name, email, pw_hash, phone, role, hospital_name), write=True)
 
+def create_user(name, email, pw_hash, phone, role="patient", hospital_name=""):
+    db(
+        """INSERT INTO users
+        (name, email, password_hash, phone, role, hospital_name)
+        VALUES (?,?,?,?,?,?)""",
+        (name, email, pw_hash, phone, role, hospital_name),
+        write=True
+    )
 
 def _norm(text):
     return "".join(ch for ch in (text or "").lower() if ch.isalnum())
@@ -799,7 +805,7 @@ def login():
             return render_login(role, "register")
 
         user = find_user(email)
-        if not (user and check_password_hash(user["password"], password)):
+        if not (user and check_password_hash(user["password_hash"], password)):
             flash("Invalid email or password.", "danger")
         elif (user.get("role") or "patient") != role:
             flash("This is a hospital staff account. Choose 'Hospital Staff' above." if (user.get("role") == "staff")
