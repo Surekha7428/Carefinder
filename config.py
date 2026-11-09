@@ -16,4 +16,4 @@ class Config:
     MYSQL_DB = os.environ.get("MYSQL_DB", "carefinder")
 
     # Hospital staff must type this code when they register (change it for real use)
-    STAFF_CODE = os.environ.get("STAFF_CODE", "CARE-STAFF-2026")
+    STAFF_CODE = os.environ.get("STAFF_CODE", "CAREFINDER")
